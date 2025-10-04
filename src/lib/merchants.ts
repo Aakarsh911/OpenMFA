@@ -13,6 +13,12 @@ type MerchantDoc = {
     createdAt: Date;
     rotatedAt?: Date;
   };
+  allowedOrigins?: string[];
+  rules?: {
+    mfaThresholdCents?: number;
+    allowWebAuthn?: boolean;
+    allowEmailOtp?: boolean;
+  };
   createdAt: Date;
 };
 
@@ -46,6 +52,15 @@ export async function getOrCreateMerchantForUser(userId: string, env: 'test'|'li
         lastFour: raw.slice(-4),
         hash: await hashSecret(raw),
         createdAt: new Date()
+      },
+      // phase 2 defaults
+      allowedOrigins: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+      ],
+      rules: {
+        allowWebAuthn: true,
+        allowEmailOtp: true,
       },
       createdAt: new Date()
     };
