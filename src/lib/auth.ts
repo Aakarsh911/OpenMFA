@@ -20,18 +20,22 @@ export const authConfig: NextAuthConfig = {
       }
       return true;
     },
-  async jwt({ token, account, profile }: { token: JWT; account?: unknown; profile?: unknown }) {
+    async jwt({ token, account, profile }: { token: JWT; account?: { providerAccountId?: string } | null; profile?: unknown }) {
       if (account && profile) {
     const p = profile as { email?: string; name?: string; picture?: string };
     token.email = p.email;
     token.name = p.name;
     token.picture = p.picture;
+        // Keep provider user id to help migrate identity later
+        (token as any).googleSub = account.providerAccountId;
       }
       return token;
     },
-  async session({ session, token }: { session: Session; token: JWT }) {
+    async session({ session, token }: { session: Session; token: JWT & { googleSub?: string } }) {
       if (session.user) {
-    (session.user as { id?: string }).id = token.sub || token.email || undefined;
+        const emailLower = (token.email || '').toLowerCase();
+        (session.user as { id?: string }).id = emailLower || token.googleSub || token.sub || undefined;
+        (session.user as { googleSub?: string | null }).googleSub = token.googleSub ?? null;
       }
       return session;
     },

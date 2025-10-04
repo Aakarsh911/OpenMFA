@@ -18,9 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             ) : (
               <div className="w-8 h-8 rounded-full bg-gray-200" />
             )}
-            <form action={async () => { 'use server'; await signOut(); }}>
-              <button className="text-sm text-gray-600 hover:text-black">Sign out</button>
-            </form>
+            <a href="/api/auth/signout?callbackUrl=/" className="text-sm text-gray-600 hover:text-black">Sign out</a>
           </div>
         </div>
         <nav className="mx-auto max-w-5xl px-4 py-2 flex gap-4 text-sm">

@@ -9,8 +9,9 @@ export async function GET() {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const env = process.env.NODE_ENV === 'production' ? 'live' : 'test';
-    const { merchant, rawKey } = await getOrCreateMerchantForUser(userId, env);
+  const env = process.env.NODE_ENV === 'production' ? 'live' : 'test';
+  const googleSub = (session?.user as any)?.googleSub ?? null;
+  const { merchant, rawKey } = await getOrCreateMerchantForUser(userId, env, googleSub);
     return NextResponse.json({ merchant, merchantKey: rawKey ?? null, showOnce: !!rawKey });
   } catch (err) {
     console.error('/api/merchant GET error:', err);
