@@ -16,8 +16,8 @@ async function getAppForUser(appId: string) {
   return { app } as const;
 }
 
-export default async function AppConfigPage({ params }: { params: { appId: string } }) {
-  const { appId } = params;
+export default async function AppConfigPage({ params }: { params: Promise<{ appId: string }> }) {
+  const { appId } = await params;
   const res = await getAppForUser(appId);
   if ('error' in res) {
     return (
