@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { auth, signIn } from '@/lib/auth';
+import { CodeSample } from '@/components/CodeSample';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +43,35 @@ export default async function Landing() {
 						<p className="text-sm text-slate-300 mt-1">{f.d}</p>
 					</div>
 				))}
+			</section>
+			<section id="quickstart" className="mx-auto max-w-6xl px-4 pb-24 space-y-4">
+				<h2 className="text-2xl font-semibold tracking-tight text-white">Quickstart</h2>
+				<p className="text-slate-300 text-sm">Create an MFA session from your app and redirect users to our hosted flow.</p>
+				<CodeSample
+					title="Create an MFA session"
+					language="javascript"
+					code={`export async function createMfaSession({ amount, successUrl, email = '' }) {
+	const origin = typeof window !== 'undefined' ? window.location.origin : '';
+	const body = {
+		appId: 'your app id',
+		amount: Number(Number(amount || 0).toFixed(2)),
+		currency: 'USD',
+		user: { email },
+		successUrl,
+		failureUrl: \`\${origin}/mfa/failure\`,
+	};
+
+	const res = await fetch('https://open-mfa.vercel.app/api/v1/sessions', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'x-merchant-id': 'your merchant id',
+			'Authorization': 'your merchant key',
+		},
+		body: JSON.stringify(body),
+	});
+}`}
+				/>
 			</section>
 		</main>
 	);
