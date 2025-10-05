@@ -76,9 +76,15 @@ export default function Client({ sessionId, email, methods, state }: { sessionId
 
   async function verifyCode() {
     setErr(null);
-    const r = await fetch('/api/v1/otp/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, code }) });
+  const r = await fetch('/api/v1/otp/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, code }) });
   const j = await r.json().catch(() => null);
-  if (!r.ok) { setErr(j?.error || 'Invalid code'); return; }
+  // If server provides a redirect (e.g., lockout after 3 attempts), honor it regardless of status
+  if (j?.redirect) { window.location.href = j.redirect; return; }
+  if (!r.ok) {
+    const remaining = typeof j?.remaining === 'number' ? j.remaining : undefined;
+    setErr(remaining !== undefined ? `${j?.error || 'Invalid code'} • ${remaining} attempt${remaining === 1 ? '' : 's'} remaining` : (j?.error || 'Invalid code'));
+    return;
+  }
   if (j.status === 'partial') { setPartial(prev => Array.from(new Set([...prev, 'email_otp']))); return; }
   window.location.href = j.redirect;
   }

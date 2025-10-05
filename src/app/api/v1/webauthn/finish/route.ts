@@ -40,11 +40,13 @@ export async function POST(req: NextRequest) {
   await db.collection('webauthn_devices').updateOne({ userId, credentialID: dev.credentialID }, { $set: { counter: newCounter, updatedAt: new Date() } });
   const res = await approveSession(s, 'webauthn');
   if ('partial' in res && res.partial) {
+    await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'challenge_partial', sessionId, ts: new Date(), method: 'webauthn' });
     return NextResponse.json({ status: 'partial', satisfiedMethods: ['webauthn'] });
   }
   const url = new URL(s.successUrl);
   url.searchParams.set('state', s.state);
   url.searchParams.set('challengeId', res.challengeId);
   url.searchParams.set('mfaToken', res.jwt);
+  await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'session_approved', sessionId, ts: new Date(), method: 'webauthn' });
   return NextResponse.json({ redirect: url.toString() });
 }

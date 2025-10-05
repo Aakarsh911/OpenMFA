@@ -38,5 +38,6 @@ export async function POST(req: NextRequest) {
     },
     { upsert: true }
   );
+  await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'webauthn_register_finish', sessionId, ts: new Date() });
   return NextResponse.json({ ok: true });
 }

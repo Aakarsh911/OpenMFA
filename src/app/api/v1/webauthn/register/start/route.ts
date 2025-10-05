@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
   const rpID = new URL(base).hostname;
   const userId = s.user?.email?.toLowerCase() || s.user?.id || s.user?.uid || s.state;
   const existing = await db.collection('webauthn_devices').find({ userId }).toArray();
+  await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'webauthn_register_start', sessionId, ts: new Date() });
   const options = await generateRegistrationOptions({
     rpName: 'OpenMFA',
     rpID,

@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
   const rpID = new URL(base).hostname;
   const userId = s.user?.email?.toLowerCase() || s.user?.id || s.user?.uid || s.state;
   const devices = await db.collection('webauthn_devices').find({ userId }).toArray();
+  await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'webauthn_start', sessionId, ts: new Date() });
   const options = await generateAuthenticationOptions({
     rpID,
     allowCredentials: devices.map(d => ({ id: Buffer.from(d.credentialID, 'base64url'), type: 'public-key' as const, transports: d.transports || undefined })),

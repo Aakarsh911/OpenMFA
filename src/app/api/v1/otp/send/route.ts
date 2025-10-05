@@ -30,12 +30,15 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
     const challengeId = 'ch_' + crypto.randomUUID().replace(/-/g, '').slice(0, 24);
     await db.collection('otp_codes').insertOne({ sessionId, challengeId, email: s.user.email.toLowerCase(), hash, attempts: 0, createdAt: new Date(), expiresAt });
-    await db.collection('audits').insertOne({ merchantId: s.merchantId, event: 'challenge.created', sessionId, challengeId, ts: new Date() });
+  await db.collection('audits').insertOne({ merchantId: s.merchantId, event: 'challenge.created', sessionId, challengeId, ts: new Date() });
+  await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'otp_send', sessionId, challengeId, ts: new Date() });
     try {
-      await sendOtp(s.user.email, code);
+  await sendOtp(s.user.email, code);
+  await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'otp_sent_ok', sessionId, challengeId, ts: new Date() });
       return NextResponse.json({ challengeId, expiresAt: expiresAt.toISOString() });
     } catch (e: any) {
       console.warn('[otp] email send failed:', e?.message || e);
+  await db.collection('analytics_events').insertOne({ merchantId: s.merchantId, type: 'otp_sent_fail', sessionId, challengeId, ts: new Date(), error: String(e?.message || e) });
       return NextResponse.json({ error: 'Email delivery failed' }, { status: 502 });
     }
   } catch (err) {
