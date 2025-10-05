@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Too soon', retryAfter }, { status: 429 });
       }
     }
+    if (Array.isArray(s.methods) && !s.methods.includes('email_otp')) {
+      return NextResponse.json({ error: 'Method not allowed for this session' }, { status: 400 });
+    }
     const code = ('' + Math.floor(100000 + Math.random() * 900000)).slice(-6);
     const hash = await bcrypt.hash(code, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);

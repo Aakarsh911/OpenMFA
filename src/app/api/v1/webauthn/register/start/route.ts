@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { generateAuthenticationOptions } from '@simplewebauthn/server';
+import { generateRegistrationOptions } from '@simplewebauthn/server';
 
 export async function POST(req: NextRequest) {
   const { sessionId } = await req.json();
@@ -15,11 +15,15 @@ export async function POST(req: NextRequest) {
   const base = process.env.NEXTAUTH_URL || (host ? `${proto}://${host}` : 'http://localhost:3000');
   const rpID = new URL(base).hostname;
   const userId = s.user?.email?.toLowerCase() || s.user?.id || s.user?.uid || s.state;
-  const devices = await db.collection('webauthn_devices').find({ userId }).toArray();
-  const options = await generateAuthenticationOptions({
+  const existing = await db.collection('webauthn_devices').find({ userId }).toArray();
+  const options = await generateRegistrationOptions({
+    rpName: 'OpenMFA',
     rpID,
-    allowCredentials: devices.map(d => ({ id: Buffer.from(d.credentialID, 'base64url'), type: 'public-key' as const, transports: d.transports || undefined })),
-    userVerification: 'preferred',
+    userID: userId,
+    userName: s.user?.email || userId,
+    attestationType: 'none',
+    excludeCredentials: existing.map(d => ({ id: Buffer.from(d.credentialID, 'base64url'), type: 'public-key' as const })),
+    authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred', authenticatorAttachment: 'platform' },
   });
   await db.collection('webauthn_challenges').insertOne({ sessionId, userId, challenge: options.challenge, createdAt: new Date() });
   return NextResponse.json({ publicKey: options });
